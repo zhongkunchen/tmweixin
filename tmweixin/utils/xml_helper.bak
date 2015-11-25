@@ -1,0 +1,72 @@
+#!coding: utf-8
+__author__ = 'zkchen'
+from xml.dom import minidom as dom
+
+
+def parse_xml_request(request):
+    """
+    解析request的xml数据为字典
+    """
+    return xml_to_data(request.body)
+
+
+def xml_to_data(xml_doc):
+    """ 将xml文本转化为字典 """
+    data = {}
+    doc = dom.parseString(xml_doc)
+    root = doc.childNodes[0]
+
+    def parse_node(n, des):
+        for node in n.childNodes:
+            if node.nodeName in ["#text", "#cdata-section"]:
+                des[node.parentNode.tagName] = node.nodeValue
+            else:
+                if node.parentNode.tagName not in des:
+                    des[node.parentNode.tagName] = {}
+                parse_node(node, des[node.parentNode.tagName])
+    parse_node(root, data)
+    return data
+
+
+def data_to_xml(data):
+    """ 将字典转换为xml文本 """
+    doc = dom.parseString("<xml></xml>")
+
+    def parse_sub(key, value):
+        if type(value) is str or type(value) is unicode:
+            sub = doc.createElement(key)
+            sub.appendChild(doc.createCDATASection(value))
+            return sub
+        if type(value) is int:
+            sub = doc.createElement(key)
+            sub.appendChild(doc.createTextNode("%s" % value))
+            return sub
+        if type(value) is dict:
+            sub = doc.createElement(key)
+            for sub_key, sub_value in value.items():
+                sub.appendChild(parse_sub(sub_key, sub_value))
+            return sub
+        if type(value) is list:
+            sub = doc.createElement(key)
+            for item in value:
+                sub.appendChild(parse_sub('item', item))
+            return sub
+        raise RuntimeError("unspported data value type %s, key(%s), value(%s)" % (type(value), key, value))
+
+    root = doc.childNodes[0]
+    for k, v in data.items():
+        root.appendChild(parse_sub(k, v))
+    return doc.toxml(encoding="utf-8")
+
+
+if __name__ == "__main__":
+    d = {
+        "name": "akun",
+        "age": 99,
+        "go": {
+            "tag_a": 88,
+            "tag_b": 77
+        }
+    }
+    print data_to_xml(d)
+    print xml_to_data(data_to_xml(d))

@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+<h1>设置seesion的值</h1>
+session:{{ session }}
+<form action="" method="post">
+    {% csrf_token %}
+    <label for="key">key:</label><input id="key" type="text" name="key"/>
+    <label for="value">value:</label><input id="value" type="text" name="value"/>
+    <input type="submit" value="确定"/>
+</form>
+</body>
+</html>

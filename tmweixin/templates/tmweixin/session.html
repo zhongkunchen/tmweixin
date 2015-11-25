@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title></title>
+    <script type="text/javascript" src="http://cdn.bootcss.com/jquery/2.1.4/jquery.min.js"></script>
+    <script type="text/javascript">
+        $(function () {
+            var redirect = "{{ redirect }}" || null;
+            var time_start = new Date().getTime();
+            var timeout = 60;
+            var interval_key = setInterval(function(){
+                $.ajax({
+                    async: false,
+                    type: "POST",
+                    data: "",
+                    url: "?ask={{ auth_token }}",
+                    complete: function (ret) {
+                        var res = $.parseJSON(ret.responseText);
+                        if (res.success) {
+                            clearInterval(interval_key);
+                            if (redirect != null) {
+                                window.location.href = redirect;
+                            }
+                            alert(res.info);
+                            $("#info").text(res.info);
+                            $(".code-img").hide();
+                            $(".session").text(res.session);
+                        }
+                    }
+                });
+                var now_time = new Date().getTime();
+                if((now_time-time_start)/1000 >timeout){
+                    clearInterval(interval_key);
+                    alert("已经过期，请刷新页面");
+                    $("img").hide();
+                }
+            }, 2000);
+        })
+    </script>
+</head>
+<body>
+<h1>扫描设置当前浏览器的session为手机端的session(请在1分钟内扫描二维码）</h1>
+<h1 id="info" style="color: red;"></h1>
+current session:
+{% for item in session %}
+<div class="session">{{ item }}</div>
+{% endfor %}
+<img src="?act=get_code" class="code-img" alt=""/>
+</body>
+</html>
